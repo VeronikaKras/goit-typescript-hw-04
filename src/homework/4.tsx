@@ -3,40 +3,37 @@ import noop from "lodash/noop";
 
 type MenuIds = "first" | "second" | "last";
 type Menu = { id: MenuIds; title: string };
-
-type SelectedMenu = {
-  id?: MenuIds;
-};
-
-type MenuSelected = {
-  selectedMenu: SelectedMenu;
-};
-
+type SelectedMenu = { id: MenuIds };
+const MenuSelectedContext = createContext<{ selectedMenu: SelectedMenu }>({
+  selectedMenu: {
+    id: "first",
+  },
+});
 type MenuAction = {
-  onSelectedMenu: (menu: SelectedMenu) => void;
+  onSelectedMenu: (selectedMenu: SelectedMenu) => void;
 };
-
+const MenuActionContext = createContext<MenuAction>({
+  onSelectedMenu: noop,
+});
 type PropsProvider = {
-  children: ReactNode; 
+  children: ReactNode;
 };
-
 function MenuProvider({ children }: PropsProvider) {
-  const [selectedMenu, setSelectedMenu] = useState<SelectedMenu>({});
-
+  const [selectedMenu, setSelectedMenu] = useState<SelectedMenu>({
+    id: "first",
+  });
   const menuContextAction = useMemo(
     () => ({
       onSelectedMenu: setSelectedMenu,
     }),
     []
   );
-
   const menuContextSelected = useMemo(
     () => ({
       selectedMenu,
     }),
     [selectedMenu]
   );
-
   return (
     <MenuActionContext.Provider value={menuContextAction}>
       <MenuSelectedContext.Provider value={menuContextSelected}>
@@ -45,15 +42,12 @@ function MenuProvider({ children }: PropsProvider) {
     </MenuActionContext.Provider>
   );
 }
-
 type PropsMenu = {
   menus: Menu[];
 };
-
 function MenuComponent({ menus }: PropsMenu) {
-  const { onSelectedMenu } = useContext<MenuAction>(MenuActionContext);
-  const { selectedMenu } = useContext<MenuSelected>(MenuSelectedContext);
-
+  const { onSelectedMenu } = useContext(MenuActionContext);
+  const { selectedMenu } = useContext(MenuSelectedContext);
   return (
     <>
       {menus.map((menu) => (
@@ -65,7 +59,6 @@ function MenuComponent({ menus }: PropsMenu) {
     </>
   );
 }
-
 export function ComponentApp() {
   const menus: Menu[] = [
     {
@@ -81,18 +74,9 @@ export function ComponentApp() {
       title: "last",
     },
   ];
-
   return (
     <MenuProvider>
       <MenuComponent menus={menus} />
     </MenuProvider>
   );
 }
-
-const MenuSelectedContext = createContext<MenuSelected>({
-  selectedMenu: {},
-});
-
-const MenuActionContext = createContext<MenuAction>({
-  onSelectedMenu: noop,
-});
